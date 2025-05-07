@@ -5,7 +5,7 @@
 
 Socket socket_server;
 
-void wait_client_message(int client_fd) {
+void handle_new_client_connection(int client_fd) {
     while (true) {
         std::string str = socket_server.recv(client_fd);
         if (str.empty()) {
@@ -51,7 +51,7 @@ int main() {
                                 2,
                                 [](int client_fd) {
                                     std::thread([=] {
-                                        wait_client_message(client_fd);
+                                        handle_new_client_connection(client_fd);
                                     }).detach();
                                 });
 
