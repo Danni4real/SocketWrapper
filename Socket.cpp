@@ -35,11 +35,15 @@ bool Socket::run_as_server(const uint port,
     addr.sin_port = htons(port);
     if (bind(m_socket_fd, (sockaddr *) &addr, sizeof(addr)) < 0) {
         std::cout << "bind() failed!" << std::endl;
+
+        close();
         return false;
     }
 
     if (listen(m_socket_fd, client_max_num) < 0) {
         std::cout << "listen() failed!" << std::endl;
+
+        close();
         return false;
     }
 
@@ -85,6 +89,8 @@ bool Socket::run_as_client(const std::string &ip, const uint port) {
     inet_pton(AF_INET, ip.c_str(), &server_addr.sin_addr);
     if (connect(m_socket_fd, (sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
         std::cout << "connect() failed!" << std::endl;
+
+        close();
         return false;
     }
 
