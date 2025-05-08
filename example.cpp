@@ -6,20 +6,21 @@
 Socket socket_server;
 
 void handle_new_client_connection(int client_fd) {
-    while (true) {
-        std::string str = socket_server.recv(client_fd);
-        if (str.empty()) {
-            std::cout << "recv() failed!" << std::endl;
-            return;
+    std::thread([=]() {
+        while (true) {
+            std::string str = socket_server.recv(client_fd);
+            if (str.empty()) {
+                std::cout << "recv() failed!" << std::endl;
+                return;
+            }
+
+            std::cout << "server: recvd a message: " << str << std::endl;
+            socket_server.send(client_fd, "ack: " + str);
         }
-
-        std::cout << "server: recvd a message: " << str << std::endl;
-
-        socket_server.send(client_fd, "ack: " + str);
-    }
+    }).detach();
 }
 
-void create_client_loop(Socket &client, const std::string &client_name) {
+void run_client(Socket &client, const std::string &client_name) {
     std::thread([=,&client]() {
         client.run_as_client("127.0.0.1", 8088);
 
@@ -49,19 +50,15 @@ void create_client_loop(Socket &client, const std::string &client_name) {
 int main() {
     socket_server.run_as_server(8088,
                                 2,
-                                [](int client_fd) {
-                                    std::thread([=] {
-                                        handle_new_client_connection(client_fd);
-                                    }).detach();
-                                });
+                                handle_new_client_connection);
 
     std::this_thread::sleep_for(std::chrono::seconds(3));
 
     Socket socket_client1;
     Socket socket_client2;
 
-    create_client_loop(socket_client1, "client1");
-    create_client_loop(socket_client2, "client2");
+    run_client(socket_client1, "client1");
+    run_client(socket_client2, "client2");
 
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(60));
