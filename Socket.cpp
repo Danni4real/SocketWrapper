@@ -214,6 +214,12 @@ std::string Socket::recv(int socket_fd) {
 void Socket::close() {
     if (m_socket_fd != INVALID_SOCKET_FD) {
         ::close(m_socket_fd);
+        
+        m_fd_to_send_mutex_map.erase(m_socket_fd);
+        m_fd_to_recv_mutex_map.erase(m_socket_fd);
+        m_fd_to_send_mem_map.erase(m_socket_fd);
+        m_fd_to_recv_mem_map.erase(m_socket_fd);
+        
         m_socket_fd = INVALID_SOCKET_FD;
     }
 }
@@ -221,6 +227,11 @@ void Socket::close() {
 void Socket::close(int client_fd) {
     if (client_fd != INVALID_SOCKET_FD) {
         ::close(client_fd);
+
+        m_fd_to_send_mutex_map.erase(client_fd);
+        m_fd_to_recv_mutex_map.erase(client_fd);
+        m_fd_to_send_mem_map.erase(client_fd);
+        m_fd_to_recv_mem_map.erase(client_fd);
     }
 }
 
