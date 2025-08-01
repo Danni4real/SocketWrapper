@@ -78,7 +78,7 @@ bool Socket::run_as_tcp_server(const uint port,
     }
 
     std::thread([=] {
-        for (int i = 0; i < client_max_num; i++) {
+        while (true) {
             int client_fd = accept(m_socket_fd, nullptr, nullptr);
             if (client_fd < 0) {
                 std::cout << "Err: accept() failed!" << std::endl;
