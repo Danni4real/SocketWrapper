@@ -59,6 +59,15 @@ bool Socket::run_as_tcp_server(const uint port,
         return false;
     }
 
+    // fix potential TIME_WAIT problem of server restart
+    int opt = 1;
+    if (setsockopt(m_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        std::cout << "Err: setsockopt() failed!" << std::endl;
+
+        close();
+        return false;
+    }
+    
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
@@ -214,8 +223,16 @@ std::string Socket::recv(int socket_fd) {
 void Socket::close() {
     if (m_socket_fd != INVALID_SOCKET_FD) {
         ::close(m_socket_fd);
+
+        m_fd_to_send_mutex_map.erase(m_socket_fd);
+        m_fd_to_recv_mutex_map.erase(m_socket_fd);
+        m_fd_to_send_mem_map.erase(m_socket_fd);
+        m_fd_to_recv_mem_map.erase(m_socket_fd);
+        
         m_socket_fd = INVALID_SOCKET_FD;
     }
+
+    m_current_role = NOT_SET;
 }
 
 void Socket::close(int client_fd) {
