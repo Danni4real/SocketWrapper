@@ -86,7 +86,7 @@ bool Socket::run_as_tcp_server(const uint port,
         return false;
     }
 
-    std::thread([=] {
+    std::thread([=, this] {
         for (int i = 0; i < client_max_num; i++) {
             int client_fd = accept(m_socket_fd, nullptr, nullptr);
             if (client_fd < 0) {
@@ -285,7 +285,9 @@ std::string Socket::tcp_recv(int fd) {
 
     char *buf = m_fd_to_recv_mem_map[fd].get();
 
-    int ret = ::recv(fd, buf, 4, 0);
+    int ret = 0;
+    
+    ret = ::recv(fd, buf, 4, 0);
     if (ret <= 0) {
         std::cout << "Err: recv failed, socket may be disconnect!" << std::endl;
         return "";
@@ -302,7 +304,7 @@ std::string Socket::tcp_recv(int fd) {
 
     uint32_t bytes_recvd = 0;
     while (bytes_recvd < msg_len) {
-        int ret = ::recv(fd, buf + bytes_recvd, msg_len - bytes_recvd, 0);
+        ret = ::recv(fd, buf + bytes_recvd, msg_len - bytes_recvd, 0);
         if (ret <= 0) {
             std::cout << "Err: recv failed, socket may be disconnect!" << std::endl;
             return "";
